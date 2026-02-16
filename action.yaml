@@ -1,4 +1,4 @@
-name: Gitea Code Review
+name: Gitea AI Code Review
 description: A GitHub Action that uses OpenAI to review code in pull request.
 inputs:
   PROGRAMMING_LANGUAGE:
