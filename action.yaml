@@ -28,6 +28,9 @@ inputs:
   MODEL:
     description: 'The model to use for the OpenAI API.'
     default: 'gpt-3.5-turbo'
+  DEBUG:
+    description: 'Enable debug mode.'
+    default: 'false'
   PROMPT_TEMPLATE:
     description: 'The template for the FULL_REVIEW_COMMENT prompt.'
     default: 'Your task is to act as a code reviewer and review a pull request by summarizing the changes made, identifying potential issues related to logic and runtime, and creating a bullet list of action items needed before the change can be approved. The output should focus on items mentioned in the given code review checklist.

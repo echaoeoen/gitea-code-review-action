@@ -4,10 +4,20 @@ const axios = require('axios');
 const detect = require('language-detect');
 const httpsProxyAgent = require('https-proxy-agent');
 
+function debug(sourceAt, ...args) {
+    if (sourceAt === 'github') {
+        core.debug(...args);
+    } else if (sourceAt === 'gitea') {
+        if(core.getInput('DEBUG') === 'true') {
+            core.info(...args);
+        }
+    }
+}
+
 function configWithProxy(config) {
     var c = config || {};
     if (process.env.OPENAI_PROXY) {
-        core.debug(`use proxy: ${process.env.OPENAI_PROXY}`);
+        debug(`use proxy: ${process.env.OPENAI_PROXY}`);
         c.proxy = false;
         c.httpsAgent = new httpsProxyAgent(process.env.OPENAI_PROXY);
         return c;
@@ -33,17 +43,17 @@ async function run() {
         const sourceAt = core.getInput('SOURCE_AT');
         const model = core.getInput('MODEL') || 'gpt-3.5-turbo';
 
-        core.debug(`programmingLanguage: ${programmingLanguage}`);
-        core.debug(`openaiToken length: ${openaiToken.length}`);
-        core.debug(`fullReviewComment: ${fullReviewComment}`);
-        core.debug(`reviewCommentPrefix: ${reviewCommentPrefix}`);
-        core.debug(`githubToken length: ${githubToken.length}`);
-        core.debug(`githubBaseURL: ${githubBaseURL}`);
-        core.debug(`promptTemplate: ${promptTemplate}`);
-        core.debug(`maxCodeLength: ${maxCodeLength}`);
-        core.debug(`answerTemplate: ${answerTemplate}`);
-        core.debug(`SourceAt: ${sourceAt}`);
-        core.debug(`model: ${model}`);
+        debug(`programmingLanguage: ${programmingLanguage}`);
+        debug(`openaiToken length: ${openaiToken.length}`);
+        debug(`fullReviewComment: ${fullReviewComment}`);
+        debug(`reviewCommentPrefix: ${reviewCommentPrefix}`);
+        debug(`githubToken length: ${githubToken.length}`);
+        debug(`githubBaseURL: ${githubBaseURL}`);
+        debug(`promptTemplate: ${promptTemplate}`);
+        debug(`maxCodeLength: ${maxCodeLength}`);
+        debug(`answerTemplate: ${answerTemplate}`);
+        debug(`SourceAt: ${sourceAt}`);
+        debug(`model: ${model}`);
 
         // Get information about the pull request review
         const comment = github.context.payload.comment;
@@ -65,9 +75,9 @@ async function run() {
                 }
             });
             const code = response.data;
-            core.debug(`diff code: ${code}`);
+            debug(`diff code: ${code}`);
             const files = parsePullRequestDiff(code);
-            core.debug(`diff files: ${files}`);
+            debug(`diff files: ${files}`);
 
             if (!content || content == fullReviewComment) {
                 // Extract the code from the pull request content
@@ -76,11 +86,11 @@ async function run() {
                 content = content.substring(reviewCommentPrefix.length);
                 content = content.replace('${code}', code);
                 const fileNames = findFileNames(content);
-                core.debug(`found files name in commment: ${fileNames}`);
+                debug(`found files name in commment: ${fileNames}`);
                 for (const fileName of fileNames) {
                     for (const key of Object.keys(files)) {
                         if (key.includes(fileName)) {
-                            core.debug(`replace \${file:${fileName}} with ${key}'s diff`);
+                            debug(`replace \${file:${fileName}} with ${key}'s diff`);
                             content = content.replace(`\${file:${fileName}}`, files[key]);
                             break;
                         }
@@ -100,9 +110,9 @@ async function run() {
                 }
             });
             const code = response.data;
-            core.debug(`diff code: ${code}`);
+            debug(`diff code: ${code}`);
             const files = parsePullRequestDiff(code);
-            core.debug(`diff files: ${files}`);
+            debug(`diff files: ${files}`);
 
             if (!content || content == fullReviewComment) {
                 // Extract the code from the pull request content
@@ -111,11 +121,11 @@ async function run() {
                 content = content.substring(reviewCommentPrefix.length);
                 content = content.replace('${code}', code);
                 const fileNames = findFileNames(content);
-                core.debug(`found files name in commment: ${fileNames}`);
+                debug(`found files name in commment: ${fileNames}`);
                 for (const fileName of fileNames) {
                     for (const key of Object.keys(files)) {
                         if (key.includes(fileName)) {
-                            core.debug(`replace \${file:${fileName}} with ${key}'s diff`);
+                            debug(`replace \${file:${fileName}} with ${key}'s diff`);
                             content = content.replace(`\${file:${fileName}}`, files[key]);
                             break;
                         }
@@ -127,7 +137,7 @@ async function run() {
         // Determine the programming language if it was not provided
         if (programmingLanguage == 'auto') {
             const detectedLanguage = detect(code);
-            core.debug(`Detected programming language: ${detectedLanguage}`);
+            debug(`Detected programming language: ${detectedLanguage}`);
             programmingLanguage = detectedLanguage;
         }
 
@@ -139,7 +149,7 @@ async function run() {
             content: content
         }];
 
-        core.debug(`content: ${content}`);
+        debug(`content: ${content}`);
 
         // Call the OpenAI ChatGPT API to analyze the code
         response = await axios.post('https://api.openai.com/v1/chat/completions', {
@@ -153,7 +163,7 @@ async function run() {
         }));
 
         const answer = response.data.choices[0].message.content;
-        core.debug(`openai response: ${answer}`);
+        debug(`openai response: ${answer}`);
 
         if(sourceAt === 'github') {
             // Reply to the review comment with the OpenAI response
@@ -177,9 +187,9 @@ async function run() {
             const url = `${githubBaseURL}/api/v1/repos/${repoOwner}/${repoName}/issues/${prNumber}/comments`;
             const headers = { 'Content-Type': 'application/json', 'Authorization': `token ${githubToken}` };
             const data = { 'body': `${comment}`};
-            core.debug(`url: ${url}`);
-            core.debug(`githubToken: ${githubToken}`);
-            core.debug(`data.body: ${data.body}`);
+            debug(`url: ${url}`);
+            debug(`githubToken: ${githubToken}`);
+            debug(`data.body: ${data.body}`);
             var response = await axios.post(url, data, {
                 headers: {
                     Authorization: `token ${githubToken}`,
