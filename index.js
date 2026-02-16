@@ -31,6 +31,7 @@ async function run() {
         const answerTemplate = core.getInput('ANSWER_TEMPLATE');
         const giteaToken = core.getInput('GITHUB_TOKEN');
         const sourceAt = core.getInput('SOURCE_AT');
+        const model = core.getInput('MODEL') || 'gpt-3.5-turbo';
 
         core.debug(`programmingLanguage: ${programmingLanguage}`);
         core.debug(`openaiToken length: ${openaiToken.length}`);
@@ -42,6 +43,7 @@ async function run() {
         core.debug(`maxCodeLength: ${maxCodeLength}`);
         core.debug(`answerTemplate: ${answerTemplate}`);
         core.debug(`SourceAt: ${sourceAt}`);
+        core.debug(`model: ${model}`);
 
         // Get information about the pull request review
         const comment = github.context.payload.comment;
@@ -141,7 +143,7 @@ async function run() {
 
         // Call the OpenAI ChatGPT API to analyze the code
         response = await axios.post('https://api.openai.com/v1/chat/completions', {
-            "model": "gpt-3.5-turbo",
+            model,
             "messages": messages
         }, configWithProxy({
             headers: {
